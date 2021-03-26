@@ -53,14 +53,13 @@ echo "[ from_last:$from_last ]"
 echo
 echo "=== check the first and last sector of target ==="
 sudo fdisk -l $target | tail -n 1 | tr -s " " > fdisk_l.txt   # save the result of fdisk -l
-st_sector=$(cut -d " " -f 2 fdisk_l.txt )   # 開始位置
-from_last=$(cut -d " " -f 3 fdisk_l.txt )   # 最後から
+st_sector=$(cut -d " " -f 2 fdisk_l.txt )                     # first sector
+from_last=$(cut -d " " -f 3 fdisk_l.txt )                     # sector from last
 rm fdisk_l.txt
 echo "[ fist sector:$st_sector ]"
 echo "[ from_last:$from_last ]"
 
 
-#echo
 echo "=== resize file system and backup with dd ==="
 sudo resize2fs $target"2"
 echo
@@ -69,5 +68,11 @@ img_fn=$(date +%F).img
 echo "[ backup with dd   bs=16M count=$bs_count    file name:$img_fn]"
 sudo dd if=$target of=./backup.img bs=16M count=$bs_count status=progress
 xz -v $img_fn
+
+
+echo "=== resize file system of target device ==="
+sudo parted $target -s rm 2
+sudo parted $target -s mkpart primary $st_sector"s" 100%
+sudo resize2fs $target"2"
 
 #EOF
