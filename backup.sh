@@ -1,11 +1,10 @@
-##!/bin/sh
+#!/bin/sh
 
 echo "=== check and input your device name ==="
 echo "check your device name."
 lsblk | grep "sd."
 echo
-echo "input device name.(e.g. /dev/sdc)"
-read -p "input x to exit:" target
+read -p "input device name.(e.g. /dev/sdc)input x to exit:" target
 if [ "$target" = x ]; then
   exit 0
 else
@@ -26,6 +25,7 @@ echo "[ estimated size is:$min_size (blocks) ]"
 echo
 echo "=== make fs small ==="
 new_fs_size_m=$((($min_size * 4 / 1024) + 100))
+new_fs_size_blocks=$((($new_fs_size_m * 1024)/4))   # 使わないが、メモとして残す
 echo "[ new fs size is:$new_fs_size_m M ]"
 sudo resize2fs -p $target"2" $new_fs_size_m"M"
 
@@ -33,20 +33,21 @@ sudo resize2fs -p $target"2" $new_fs_size_m"M"
 echo
 echo "=== check the first sector of target ==="
 sudo fdisk -l $target | tail -n 1 | tr -s " " > fdisk_l.txt   # save the result of fdisk -l
-st_sector=$(cut -d " " -f 2 fdisk_l.txt )   # 開始位置
+st_sector=$(cut -d " " -f 2 fdisk_l.txt )
 rm fdisk_l.txt
-echo "[ fist sector:$st_sector ]"
+echo "[ fist sector:$st_sector ]"   # 532480 
 
 
 echo
 echo "=== resize partition and check the last sector of target ==="
-end_giga_float=`echo "scale=2; ($new_fs_size_m * 1.2) / 1024" | bc`
-echo "[ end point of 2nd partition:$end_giga_float G]"
-sudo parted $target -s rm 2                     # fist:532480   from_last:60751871
-sudo parted $target -s mkpart primary $st_sector"s" $end_giga_float"G"
+partition_size_m=$(($new_fs_size_m + 100))
+echo "[ end point of 2nd partition:$partition_size_m M]"
+
+sudo parted $target -s rm 2
+sudo parted $target -s mkpart primary $st_sector"s" $partition_size_m"M"
 
 sudo fdisk -l $target | tail -n 1 | tr -s " " > fdisk_l.txt   # save the result of fdisk -l
-from_last=$(cut -d " " -f 3 fdisk_l.txt )   # 最後から
+from_last=$(cut -d " " -f 3 fdisk_l.txt )                     # sectro from last
 rm fdisk_l.txt
 echo "[ sector of from-last:$from_last ]"
 
