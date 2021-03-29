@@ -61,7 +61,7 @@ bs_count=$(((($from_last + 1) * 512) / (16 * 1024 * 1024) + 1))
 img_fn=$(date +%F)_backup.img
 echo "[ backup with dd   bs=16M count=$bs_count    file name:$img_fn]"
 sudo dd if=$target of=./$img_fn bs=16M count=$bs_count status=progress
-xz -v $img_fn
+#xz -v $img_fn                                                 # if you want to
 
 
 echo
