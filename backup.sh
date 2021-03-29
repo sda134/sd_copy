@@ -56,7 +56,6 @@ echo "[ sector of from-last:$from_last ]"
 echo
 echo "=== resize file system and backup with dd ==="
 sudo resize2fs $target"2"
-echo
 bs_count=$(((($from_last + 1) * 512) / (16 * 1024 * 1024) + 1))
 img_fn=$(date +%F)_backup.img
 echo "[ backup with dd   bs=16M count=$bs_count    file name:$img_fn]"
